@@ -1,0 +1,95 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isResourceOwner() {
+      return isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    function isDraftingOwner() {
+      return isSignedIn() && request.resource.data.userId == request.auth.uid;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // --- Users Collection ---
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) 
+                    && request.resource.data.keys().hasAll(['uid', 'email'])
+                    && request.resource.data.uid == request.auth.uid;
+      allow update: if isOwner(userId);
+      allow delete: if false;
+    }
+
+    // --- Subjects Collection ---
+    match /subjects/{subjectId} {
+      allow read: if isSignedIn() && (resource == null || resource.data.userId == request.auth.uid);
+      allow create: if isSignedIn() && isValidId(subjectId)
+                    && request.resource.data.userId == request.auth.uid
+                    && request.resource.data.name is string && request.resource.data.name.size() <= 100;
+      allow update: if isResourceOwner() && isDraftingOwner()
+                    && request.resource.data.name is string && request.resource.data.name.size() <= 100;
+      allow delete: if isResourceOwner();
+    }
+
+    // --- Tasks Collection ---
+    match /tasks/{taskId} {
+      allow read: if isSignedIn() && (resource == null || resource.data.userId == request.auth.uid);
+      allow create: if isSignedIn() && isValidId(taskId)
+                    && request.resource.data.userId == request.auth.uid
+                    && request.resource.data.title is string && request.resource.data.title.size() <= 200;
+      allow update: if isResourceOwner() && isDraftingOwner()
+                    && request.resource.data.title is string && request.resource.data.title.size() <= 200;
+      allow delete: if isResourceOwner();
+    }
+
+    // --- Study Logs Collection ---
+    match /study_logs/{logId} {
+      allow read: if isSignedIn() && (resource == null || resource.data.userId == request.auth.uid);
+      allow create: if isSignedIn() && isValidId(logId)
+                    && request.resource.data.userId == request.auth.uid
+                    && request.resource.data.durationMinutes is number;
+      allow update: if isResourceOwner() && isDraftingOwner()
+                    && request.resource.data.durationMinutes is number;
+      allow delete: if isResourceOwner();
+    }
+
+    // --- Quizzes Collection ---
+    match /quizzes/{quizId} {
+      allow read: if isSignedIn() && (resource == null || resource.data.userId == request.auth.uid);
+      allow create: if isSignedIn() && isValidId(quizId)
+                    && request.resource.data.userId == request.auth.uid
+                    && request.resource.data.score is number;
+      allow update: if isResourceOwner() && isDraftingOwner()
+                    && request.resource.data.score is number;
+      allow delete: if isResourceOwner();
+    }
+
+    // --- AI Readiness Analyses ---
+    match /readiness_analyses/{analysisId} {
+      allow read: if isSignedIn() && (resource == null || resource.data.userId == request.auth.uid);
+      // Let standard clients read analyses, but they cannot write them if they're system-generated
+      // Wait, in our case the client or server can write, but since it's an AI-generated analyzer,
+      // let's allow read and let clients write only if it belongs to them (or can be written server side)
+      allow write: if isSignedIn() && (resource == null || resource.data.userId == request.auth.uid)
+                    && (request.resource == null || request.resource.data.userId == request.auth.uid);
+    }
+  }
+}

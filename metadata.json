@@ -1,0 +1,6 @@
+{
+  "name": "Atodemic",
+  "description": "AI-powered predictive student operating system that monitors learning gaps and computes exam readiness.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

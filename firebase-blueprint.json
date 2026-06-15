@@ -1,0 +1,127 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "Information about the student's onboarding and learning goals",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "The unique user id" },
+        "email": { "type": "string", "description": "The user's email address" },
+        "displayName": { "type": "string", "description": "The user's display name" },
+        "targetExam": { "type": "string", "description": "The exam the user is preparing for (e.g., SAT, MCAT, CFA)" },
+        "examDate": { "type": "string", "format": "date-time", "description": "The scheduled date of the exam" },
+        "targetScore": { "type": "number", "description": "The user's target score or score percentage" },
+        "onboarded": { "type": "boolean", "description": "Whether the user completed onboarding" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp of creation" }
+      },
+      "required": ["uid", "email"]
+    },
+    "Subject": {
+      "title": "Subject",
+      "description": "An academic subject or course being studied",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique subject identifier" },
+        "userId": { "type": "string", "description": "The ID of the owner user" },
+        "name": { "type": "string", "description": "Subject name" },
+        "targetScore": { "type": "number", "description": "Target score for this subject (e.g. percentage 0-100)" },
+        "color": { "type": "string", "description": "Hex color code or class associated with the subject" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "name"]
+    },
+    "Task": {
+      "title": "Task",
+      "description": "A study task, homework, review, or exam preparation todo item",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "subjectId": { "type": "string" },
+        "title": { "type": "string" },
+        "estimatedHours": { "type": "number" },
+        "completed": { "type": "boolean" },
+        "dueDate": { "type": "string", "format": "date" },
+        "priority": { "type": "string", "enum": ["low", "medium", "high"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "subjectId", "title"]
+    },
+    "StudyLog": {
+      "title": "StudyLog",
+      "description": "A logged study session where active learning occurred",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "subjectId": { "type": "string" },
+        "durationMinutes": { "type": "number" },
+        "date": { "type": "string", "format": "date" },
+        "topicsCovered": { "type": "string" },
+        "focusScore": { "type": "number", "description": "Focus level from 1 (distracted) to 5 (hyper-focused)" },
+        "difficulty": { "type": "string", "enum": ["easy", "medium", "hard"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "subjectId", "durationMinutes", "date"]
+    },
+    "Quiz": {
+      "title": "Quiz",
+      "description": "Performance metrics of quizzes, mock exams, or practice sets",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "subjectId": { "type": "string" },
+        "score": { "type": "number", "description": "Quiz percentage score (0-100)" },
+        "numQuestions": { "type": "number" },
+        "numCorrect": { "type": "number" },
+        "confidenceLevel": { "type": "string", "enum": ["low", "medium", "high"] },
+        "topicsCovered": { "type": "string" },
+        "date": { "type": "string", "format": "date" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "subjectId", "score", "date"]
+    },
+    "ReadinessAnalysis": {
+      "title": "ReadinessAnalysis",
+      "description": "AI-calculated exam readiness score prediction and qualitative suggestions",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "readinessScore": { "type": "number", "description": "The main readiness score calculation (0-100)" },
+        "riskLevel": { "type": "string", "enum": ["critical", "caution", "warning", "slightly_behind", "on_track", "ready"] },
+        "gaps": { "type": "array", "items": { "type": "string" } },
+        "recommendations": { "type": "array", "items": { "type": "string" } },
+        "calculatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "readinessScore", "riskLevel", "calculatedAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Collection of student user profiles"
+    },
+    "/subjects/{subjectId}": {
+      "schema": "Subject",
+      "description": "Subjects added by student users"
+    },
+    "/tasks/{taskId}": {
+      "schema": "Task",
+      "description": "Todos and study milestones"
+    },
+    "/study_logs/{logId}": {
+      "schema": "StudyLog",
+      "description": "Logged study sessions of the user"
+    },
+    "/quizzes/{quizId}": {
+      "schema": "Quiz",
+      "description": "Practice performance outputs"
+    },
+    "/readiness_analyses/{analysisId}": {
+      "schema": "ReadinessAnalysis",
+      "description": "Historical readiness evaluations"
+    }
+  }
+}
