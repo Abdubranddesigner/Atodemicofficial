@@ -1,10 +1,15 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { initializeFirestore } from 'firebase/firestore';
 import firebaseConfig from '../../firebase-applet-config.json';
 
 const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+
+// Initialize Firestore explicitly with databaseId as both a settings property and positional argument
+export const db = initializeFirestore(app, {
+  databaseId: firebaseConfig.firestoreDatabaseId
+} as any, firebaseConfig.firestoreDatabaseId);
+
 export const auth = getAuth();
 
 export const googleProvider = new GoogleAuthProvider();
